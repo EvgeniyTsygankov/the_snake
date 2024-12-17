@@ -73,13 +73,15 @@ class Apple(GameObject):
 
         Returns: None
         """
-        while True:
+        for position in self.position:
             position_x = randint(0, GRID_WIDTH - 1)
             position_y = randint(0, GRID_HEIGHT - 1)
-            position = (position_x * GRID_SIZE, position_y * GRID_SIZE)
+            position = (
+                position_x * GRID_SIZE,
+                position_y * GRID_SIZE
+            )
             if snake_positions is None or position not in snake_positions:
                 self.position = position
-                return
 
     def draw(self):
         """
@@ -98,12 +100,11 @@ class Snake(GameObject):
 
     def __init__(self):
         super().__init__()
-        self.length = 1
         self.positions = [((SCREEN_WIDTH // 2), (SCREEN_HEIGHT) // 2)]
         self.direction = RIGHT
         self.next_direction = None
-        self.body_color = SNAKE_COLOR
         self.last = None
+        self.reset()
 
     def update_direction(self):
         """
@@ -122,25 +123,30 @@ class Snake(GameObject):
         Args: None
         Returns: None
         """
-        # Получение текущей позицит головы.
-        head_posit = self.get_head_position()
+        # Получение текущей позиции головы.
+        current_head_position = self.get_head_position()
+        x_1, y_1 = current_head_position
 
         # Вычисление новой позиции головы.
-        new_head_posit = (
-            head_posit[0] + GRID_SIZE * self.direction[0],
-            head_posit[1] + GRID_SIZE * self.direction[1],
+        direction_x, direction_y = self.direction
+        new_head_position = (
+            x_1 + GRID_SIZE * direction_x,
+            y_1 + GRID_SIZE * direction_y,
         )
         # Проверка на выход за пределы экрана.
-        new_head_posit = (
-            (new_head_posit[0] + SCREEN_WIDTH) % SCREEN_WIDTH,
-            (new_head_posit[1] + SCREEN_HEIGHT) % SCREEN_HEIGHT
+        x_2, y_2 = new_head_position
+        new_head_position = (
+            x_2 % SCREEN_WIDTH,
+            y_2 % SCREEN_HEIGHT
         )
         # Добавление новой позиции головы в список.
-        self.positions.insert(0, new_head_posit)
+        self.positions.insert(0, new_head_position)
 
         # Удаление последней позиции змейки, если длина не изменилась
         if len(self.positions) > self.length + 1:
-            self.positions.pop()
+            self.last = self.positions.pop()
+        else:
+            self.last = None
 
     def reset(self):
         """
@@ -152,6 +158,7 @@ class Snake(GameObject):
         self.length = 1
         self.positions = [self.position]
         self.direction = choice([RIGHT, LEFT, DOWN, UP])
+        self.body_color = SNAKE_COLOR
 
     def get_head_position(self):
         """
@@ -176,7 +183,10 @@ class Snake(GameObject):
             pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
         # Отрисовка головы змейки.
-        head_rect = pygame.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
+        head_rect = pygame.Rect(
+            self.get_head_position(),
+            (GRID_SIZE, GRID_SIZE)
+        )
         pygame.draw.rect(screen, self.body_color, head_rect)
         pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
@@ -219,28 +229,28 @@ def main():
     # Создание объектов игры.
     apple = Apple()
     snake = Snake()
-    game = True
-    while game:
+
+    while True:
         clock.tick(SPEED)
         handle_keys(snake)
-        screen.fill(BOARD_BACKGROUND_COLOR)
-        apple.draw()
         snake.update_direction()
         snake.move()
-        snake.draw()
         pygame.display.flip()
 
         # Проверка поедания яблока.
         if snake.get_head_position() == apple.position:
-            apple.randomize_position(snake.positions)
             snake.length += 1
-            snake.positions.append(snake.last)
+            apple.randomize_position(snake.positions)
 
         # Проверка столкновения змеи со своим телом.
-        if len(snake.positions) > len(set(snake.positions)):
+        elif snake.get_head_position() in snake.positions[1:]:
             snake.reset()
+
         screen.fill(BOARD_BACKGROUND_COLOR)
+        apple.draw()
+        snake.draw()
+        pygame.display.update()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
