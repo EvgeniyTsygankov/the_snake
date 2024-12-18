@@ -73,15 +73,14 @@ class Apple(GameObject):
 
         Returns: None
         """
-        for position in self.position:
-            position_x = randint(0, GRID_WIDTH - 1)
-            position_y = randint(0, GRID_HEIGHT - 1)
-            position = (
-                position_x * GRID_SIZE,
-                position_y * GRID_SIZE
-            )
-            if snake_positions is None or position not in snake_positions:
-                self.position = position
+        position_x = randint(0, GRID_WIDTH - 1)
+        position_y = randint(0, GRID_HEIGHT - 1)
+        position = (
+            position_x * GRID_SIZE,
+            position_y * GRID_SIZE
+        )
+        if snake_positions is None or position not in snake_positions:
+            self.position = position
 
     def draw(self):
         """
@@ -100,10 +99,7 @@ class Snake(GameObject):
 
     def __init__(self):
         super().__init__()
-        self.positions = [((SCREEN_WIDTH // 2), (SCREEN_HEIGHT) // 2)]
         self.direction = RIGHT
-        self.next_direction = None
-        self.last = None
         self.reset()
 
     def update_direction(self):
@@ -124,26 +120,19 @@ class Snake(GameObject):
         Returns: None
         """
         # Получение текущей позиции головы.
-        current_head_position = self.get_head_position()
-        x_1, y_1 = current_head_position
+        head_position_x, head_position_y = self.get_head_position()
 
-        # Вычисление новой позиции головы.
+        # Вычисление новой позиции головы c проверкой на выход за пределы окна
         direction_x, direction_y = self.direction
         new_head_position = (
-            x_1 + GRID_SIZE * direction_x,
-            y_1 + GRID_SIZE * direction_y,
-        )
-        # Проверка на выход за пределы экрана.
-        x_2, y_2 = new_head_position
-        new_head_position = (
-            x_2 % SCREEN_WIDTH,
-            y_2 % SCREEN_HEIGHT
+            (head_position_x + GRID_SIZE * direction_x) % SCREEN_WIDTH,
+            (head_position_y + GRID_SIZE * direction_y) % SCREEN_HEIGHT
         )
         # Добавление новой позиции головы в список.
         self.positions.insert(0, new_head_position)
 
         # Удаление последней позиции змейки, если длина не изменилась
-        if len(self.positions) > self.length + 1:
+        if len(self.positions) > self.length:
             self.last = self.positions.pop()
         else:
             self.last = None
@@ -156,9 +145,11 @@ class Snake(GameObject):
         Returns: None
         """
         self.length = 1
-        self.positions = [self.position]
+        self.positions = [((SCREEN_WIDTH // 2), (SCREEN_HEIGHT) // 2)]
         self.direction = choice([RIGHT, LEFT, DOWN, UP])
+        self.next_direction = None
         self.body_color = SNAKE_COLOR
+        self.last = None
 
     def get_head_position(self):
         """
@@ -245,8 +236,7 @@ def main():
         # Проверка столкновения змеи со своим телом.
         elif snake.get_head_position() in snake.positions[1:]:
             snake.reset()
-
-        screen.fill(BOARD_BACKGROUND_COLOR)
+            screen.fill(BOARD_BACKGROUND_COLOR)
         apple.draw()
         snake.draw()
         pygame.display.update()
