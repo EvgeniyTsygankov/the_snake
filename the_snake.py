@@ -73,14 +73,14 @@ class Apple(GameObject):
 
         Returns: None
         """
-        position_x = randint(0, GRID_WIDTH - 1)
-        position_y = randint(0, GRID_HEIGHT - 1)
         position = (
-            position_x * GRID_SIZE,
-            position_y * GRID_SIZE
+            randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+            randint(0, GRID_HEIGHT - 1) * GRID_SIZE
         )
         if snake_positions is None or position not in snake_positions:
             self.position = position
+        else:
+            self.randomize_position()
 
     def draw(self):
         """
@@ -100,6 +100,7 @@ class Snake(GameObject):
     def __init__(self):
         super().__init__()
         self.direction = RIGHT
+        self.body_color = SNAKE_COLOR
         self.reset()
 
     def update_direction(self):
@@ -148,7 +149,6 @@ class Snake(GameObject):
         self.positions = [((SCREEN_WIDTH // 2), (SCREEN_HEIGHT) // 2)]
         self.direction = choice([RIGHT, LEFT, DOWN, UP])
         self.next_direction = None
-        self.body_color = SNAKE_COLOR
         self.last = None
 
     def get_head_position(self):
@@ -167,12 +167,6 @@ class Snake(GameObject):
         Args: None
         Returns: None
         """
-        # Отрисовка змейки на экране, кроме последнего сегмента.
-        for position in self.positions[:-1]:
-            rect = (pygame.Rect(position, (GRID_SIZE, GRID_SIZE)))
-            pygame.draw.rect(screen, self.body_color, rect)
-            pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
-
         # Отрисовка головы змейки.
         head_rect = pygame.Rect(
             self.get_head_position(),
